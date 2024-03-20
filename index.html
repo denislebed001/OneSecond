@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iOS 17 Style Text Formatter</title>
+<style>
+    body {
+        font-family: 'Helvetica Neue', sans-serif;
+        background-color: #f2f2f7;
+        margin: 0;
+        padding: 20px;
+    }
+    .app-container {
+        background-color: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    .header {
+        background-color: #ff2d55;
+        color: #ffffff;
+        padding: 20px;
+        text-align: center;
+    }
+    .content {
+        padding: 20px;
+    }
+    textarea, input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+    button {
+        background-color: #007aff;
+        color: #ffffff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 14px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+    }
+    button:hover {
+        background-color: #0051a8;
+    }
+    #outputText {
+        white-space: pre-wrap;
+        background-color: #e1e1e1;
+        padding: 10px;
+        border-radius: 10px;
+    }
+</style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <h1>OneSecondPrice</h1>
+    </div>
+    <div class="content">
+        <textarea id="inputText" rows="6" placeholder="Введите текст здесь..."></textarea>
+        <input type="number" id="increasePercent" placeholder="Увеличить на %" min="0" step="1">
+        <button onclick="processText('addDotsToLastNumber')">Определение цен в тексте</button>
+        <button onclick="processText('increasePrices')">Изменить цены</button>
+        <button onclick="processText('removeDots')">Удалить все точки</button>
+        <button onclick="copyToClipboard()">Копировать текст</button>
+        <button onclick="pasteFromClipboard()">Вставить текст</button>
+        <div id="outputText"></div>
+    </div>
+</div>
+
+<script>
+function addDotsToLastNumber(text) {
+    return text.split('\n').map(line => {
+        return line.replace(/(\d+)(?![\s\S]*\d)/, '.$1.');
+    }).join('\n');
+}
+
+function addDotsAndDisplay() {
+    const inputText = document.getElementById('inputText').value;
+    const updatedText = addDotsToLastNumber(inputText);
+    document.getElementById('outputText').textContent = updatedText;
+}
+
+function findNumbersBetweenDots(text) {
+    const regex = /(?<=\.)\d+(?=\.)/g;
+    return text.match(regex) || [];
+}
+
+function increasePrices(text, increasePercent) {
+    const regex = /(?<=\.)\d+\b(?=\.)/g;
+    let modifiedText = text;
+    const matches = text.match(regex) || [];
+
+    const updatedPrices = matches.map(price => {
+        let updatedPrice = Math.ceil(parseInt(price) * (1 + increasePercent / 100));
+        updatedPrice = Math.ceil(updatedPrice / 100) * 100;
+        return updatedPrice;
+    });
+
+    matches.forEach((price, index) => {
+        modifiedText = modifiedText.replace(`.${price}.`, `.${updatedPrices[index]}.`);
+    });
+
+    return modifiedText;
+}
+
+function findAndDisplayNumbers() {
+    const inputText = document.getElementById('inputText').value;
+    const increasePercent = parseFloat(document.getElementById('increasePercent').value);
+    const numbers = findNumbersBetweenDots(inputText);
+    if (numbers.length > 0 && !isNaN(increasePercent)) {
+        const updatedText = increasePrices(inputText, increasePercent);
+        document.getElementById('outputText').textContent = updatedText;
+    } else {
+        document.getElementById('outputText').textContent = 'Нет чисел для изменения или процент не задан.';
+    }
+}
+
+function removeDots() {
+    const inputText = document.getElementById('inputText').value;
+    const textWithoutDots = inputText.replace(/\./g, '');
+    document.getElementById('outputText').textContent = textWithoutDots;
+    
+}
+function processText(operationName) {
+    const inputText = document.getElementById('inputText').value;
+    const increasePercent = parseFloat(document.getElementById('increasePercent').value) || 0;
+    let updatedText;
+
+    switch(operationName) {
+        case 'addDotsToLastNumber':
+            updatedText = addDotsToLastNumber(inputText);
+            break;
+        case 'increasePrices':
+            updatedText = increasePrices(inputText, increasePercent);
+            break;
+        case 'removeDots':
+            updatedText = inputText.replace(/\./g, '');
+            break;
+        default:
+            updatedText = inputText;
+    }
+
+    document.getElementById('outputText').textContent = updatedText;
+    document.getElementById('inputText').value = updatedText; // Обновление текста в textarea
+}
+      function copyToClipboard() {
+    const text = document.getElementById('outputText').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Текст скопирован в буфер обмена!');
+    }).catch(err => {
+        alert('Ошибка при копировании текста: ', err);
+    });
+}
+
+function pasteFromClipboard() {
+    navigator.clipboard.readText().then(text => {
+        document.getElementById('inputText').value = text;
+        alert('Текст вставлен из буфера обмена!');
+    }).catch(err => {
+        alert('Ошибка при вставке текста: ', err);
+    });
+}
+</script>
+</body>
+</html>
