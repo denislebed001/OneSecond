@@ -98,21 +98,13 @@ function findNumbersBetweenDots(text) {
 
 function increasePrices(text, increasePercent) {
     const regex = /(?<=\.)\d+\b(?=\.)/g;
-    let modifiedText = text;
-    const matches = text.match(regex) || [];
-
-    const updatedPrices = matches.map(price => {
-        let updatedPrice = Math.ceil(parseInt(price) * (1 + increasePercent / 100));
+    return text.replace(regex, (match) => {
+        let updatedPrice = Math.ceil(parseInt(match) * (1 + increasePercent / 100));
         updatedPrice = Math.ceil(updatedPrice / 100) * 100;
         return updatedPrice;
     });
-
-    matches.forEach((price, index) => {
-        modifiedText = modifiedText.replace(`.${price}.`, `.${updatedPrices[index]}.`);
-    });
-
-    return modifiedText;
 }
+
 
 function findAndDisplayNumbers() {
     const inputText = document.getElementById('inputText').value;
